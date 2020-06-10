@@ -1,5 +1,6 @@
 package com.mpoda.cursomc;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,13 +13,20 @@ import com.mpoda.cursomc.domain.Cidade;
 import com.mpoda.cursomc.domain.Cliente;
 import com.mpoda.cursomc.domain.Endereco;
 import com.mpoda.cursomc.domain.Estado;
+import com.mpoda.cursomc.domain.Pagamento;
+import com.mpoda.cursomc.domain.PagamentoComBoleto;
+import com.mpoda.cursomc.domain.PagamentoComCartao;
+import com.mpoda.cursomc.domain.Pedido;
 import com.mpoda.cursomc.domain.Produto;
+import com.mpoda.cursomc.domain.enums.EstadoPagamento;
 import com.mpoda.cursomc.domain.enums.TipoCliente;
 import com.mpoda.cursomc.repositories.CategoriaRepository;
 import com.mpoda.cursomc.repositories.CidadeRepository;
 import com.mpoda.cursomc.repositories.ClienteRepository;
 import com.mpoda.cursomc.repositories.EnderecoRepository;
 import com.mpoda.cursomc.repositories.EstadoRepository;
+import com.mpoda.cursomc.repositories.PagamentoRepository;
+import com.mpoda.cursomc.repositories.PedidoRepository;
 import com.mpoda.cursomc.repositories.ProdutoRepository;
 
 @SpringBootApplication
@@ -29,22 +37,28 @@ public class CursomcApplication implements CommandLineRunner{
 	}
 	
 	@Autowired
-	CategoriaRepository categoriaRepository;
+	private CategoriaRepository categoriaRepository;
 	
 	@Autowired
-	ProdutoRepository produtoRepository;
+	private ProdutoRepository produtoRepository;
 	
 	@Autowired
-	EstadoRepository estadoRepository;
+	private EstadoRepository estadoRepository;
 	
 	@Autowired
-	CidadeRepository cidadeRepository;
+	private CidadeRepository cidadeRepository;
 
 	@Autowired
-	ClienteRepository clienteRepository;
+	private ClienteRepository clienteRepository;
 	
 	@Autowired
-	EnderecoRepository enderecoRepository;
+	private EnderecoRepository enderecoRepository;
+	
+	@Autowired
+	private PedidoRepository pedidoRepository;
+	
+	@Autowired
+	private PagamentoRepository pagamentoRepository;
 	
 	@Override
 	public void run(String... args) throws Exception {
@@ -89,6 +103,22 @@ public class CursomcApplication implements CommandLineRunner{
 		
 		clienteRepository.saveAll(Arrays.asList(cliente1));
 		enderecoRepository.saveAll(Arrays.asList(endereco1, endereco2));
+		
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy hh:mm");
+		
+		Pedido pedi1 = new Pedido(null, sdf.parse("30/09/2017 10:32"), cliente1, endereco1);
+		Pedido pedi2 = new Pedido(null, sdf.parse("10/10/2017 19:35"), cliente1, endereco2);
+		
+		Pagamento pagto1 = new PagamentoComCartao(null, EstadoPagamento.QUITADO, pedi1, cliente1, endereco1, 6);
+		pedi1.setPagamento(pagto1);
+		Pagamento pagto2 = new PagamentoComBoleto(null, EstadoPagamento.PENDENTE, pedi2, cliente1, endereco2, 
+				sdf.parse("20/10/2017 00:00"), null);
+		pedi2.setPagamento(pagto2);
+		
+		cliente1.getPedidos().addAll(Arrays.asList(pedi1, pedi2));
+		
+		pedidoRepository.saveAll(Arrays.asList(pedi1, pedi2));
+		pagamentoRepository.saveAll(Arrays.asList(pagto1, pagto2));
 	}
 
 }
